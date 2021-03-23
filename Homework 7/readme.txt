@@ -1,0 +1,1 @@
+Didn't have time to finish number 4. was studying for midterm. any help would be nice though.

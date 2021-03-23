@@ -1,0 +1,80 @@
+Student Name: Student 1
+Number of Visits: 77
+Topic A: 24 times
+Topic B: 17 times
+Topic C: 11 times
+Topic D: 25 times
+
+
+Student Name: Student 2
+Number of Visits: 68
+Topic A: 22 times
+Topic B: 17 times
+Topic C: 21 times
+Topic D: 8 times
+
+
+Student Name: Student 3
+Number of Visits: 53
+Topic A: 18 times
+Topic B: 16 times
+Topic C: 7 times
+Topic D: 12 times
+
+
+Student Name: Student 4
+Number of Visits: 52
+Topic A: 11 times
+Topic B: 16 times
+Topic C: 15 times
+Topic D: 10 times
+
+
+Student Name: Student 5
+Number of Visits: 61
+Topic A: 8 times
+Topic B: 19 times
+Topic C: 14 times
+Topic D: 20 times
+
+
+Student Name: Student 6
+Number of Visits: 60
+Topic A: 14 times
+Topic B: 14 times
+Topic C: 13 times
+Topic D: 19 times
+
+
+Student Name: Student 7
+Number of Visits: 59
+Topic A: 10 times
+Topic B: 12 times
+Topic C: 18 times
+Topic D: 19 times
+
+
+Student Name: Student 8
+Number of Visits: 67
+Topic A: 14 times
+Topic B: 12 times
+Topic C: 19 times
+Topic D: 22 times
+
+
+Student Name: Student 9
+Number of Visits: 56
+Topic A: 13 times
+Topic B: 15 times
+Topic C: 12 times
+Topic D: 16 times
+
+
+Student Name: Student 10
+Number of Visits: 63
+Topic A: 18 times
+Topic B: 17 times
+Topic C: 8 times
+Topic D: 20 times
+
+

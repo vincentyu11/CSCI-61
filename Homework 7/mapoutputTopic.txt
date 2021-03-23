@@ -1,0 +1,56 @@
+Topic: A
+Number of Visits: 152
+Student 1: 24 times
+Student 2: 22 times
+Student 3: 18 times
+Student 4: 11 times
+Student 5: 8 times
+Student 6: 14 times
+Student 7: 10 times
+Student 8: 14 times
+Student 9: 13 times
+Stduent 10: 18 times
+
+
+Topic: B
+Number of Visits: 155
+Student 1: 17 times
+Student 2: 17 times
+Student 3: 16 times
+Student 4: 16 times
+Student 5: 19 times
+Student 6: 14 times
+Student 7: 12 times
+Student 8: 12 times
+Student 9: 15 times
+Stduent 10: 17 times
+
+
+Topic: C
+Number of Visits: 138
+Student 1: 11 times
+Student 2: 21 times
+Student 3: 7 times
+Student 4: 15 times
+Student 5: 14 times
+Student 6: 13 times
+Student 7: 18 times
+Student 8: 19 times
+Student 9: 12 times
+Stduent 10: 8 times
+
+
+Topic: D
+Number of Visits: 171
+Student 1: 25 times
+Student 2: 8 times
+Student 3: 12 times
+Student 4: 10 times
+Student 5: 20 times
+Student 6: 19 times
+Student 7: 19 times
+Student 8: 22 times
+Student 9: 16 times
+Stduent 10: 20 times
+
+

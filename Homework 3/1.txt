@@ -1,0 +1,39 @@
+CS61 HW
+Navid
+Trees
+
+Problem 1.
+
+With 0 nodes, there can be 1 empty tree.
+With 1 node, there can be 1 tree that is just the root.
+And given 2 nodes, there can be 2 different trees made.
+
+So far we have:
+
+Nodes: 0	Trees: 1
+Nodes: 1	Trees: 1
+Nodes: 2	Trees: 2
+
+Using recursion, we can find a formula to find the number of trees that can be made using n number of nodes.
+
+
+The number of trees that can be with three nodes is five because:
+
+T(0) = 1
+T(1) = 1
+T(2) = 2
+
+and T(0)*T(2) + T(1)*T(1) + T(2)*T(0) = 1*2 + 1*1 + 2*1 = 2+1+2 = 5
+
+thus, T(3) = 5
+
+So we can find the number of trees that can be made with n nodes by only using number of trees made from 0 to n-1 nodes.
+
+With that, we can easily find the number of trees made with 4 nodes which is:
+
+T(4) = T(0)*T(3) + T(1)*T(2) + T(2)*T(1) + T(3)*T(0) = 1*5 + 1*2 + 2*1 + 5*1 = 5+2+2+5 = 14
+
+So T(4) = 14
+
+
+

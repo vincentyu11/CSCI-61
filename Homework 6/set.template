@@ -1,0 +1,486 @@
+#include "set.h"
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <iomanip>
+using namespace std;
+
+namespace main_savitch_11 {
+    template <class Item>
+    set<Item>::set() {
+        data_count = 0;
+        child_count = 0;
+        for (auto& p : subset)
+        {
+            p = nullptr;
+        }
+    }
+    
+    template <class Item>
+    set<Item>::set(const set<Item>& source)
+    {
+        data_count = source.data_count;
+        child_count = source.child_count;
+        for (int i = 0; i < data_count; i++)
+        {
+            data[i] = source.data[i];
+        }
+        this = b_tree_copy(&source);
+    }
+
+    
+    
+    template <class Item>
+    void set<Item>::clear()
+    {
+        for (auto& v : data)
+        {
+            v = Item();
+        }
+        for (auto& p : subset)
+        {
+            b_tree_clear(p);
+        }
+        child_count = 0;
+        data_count = 0;
+    }
+    
+    template <class Item>
+    bool set<Item>::insert(const Item& entry)
+    {
+        if (loose_insert(entry))
+        {
+            if (data_count > MAXIMUM)
+            {
+                set *child = new set;
+                for (int i = 0; i<data_count; i++)
+                {
+                    child->data[i] = data[i];
+                }
+                for (int j = 0; j<child_count; j++)
+                {
+                    child->subset[j] = subset[j];
+                }
+                child->child_count = child_count;
+                child->data_count = data_count;
+                child_count = 1;
+                data_count = 0;
+                subset[0] = child;
+                fix_excess(0);
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    
+    template <class Item>
+    void set<Item>::operator=(const set<Item>& source)
+    {
+        if (this == &source)
+        {
+            return;
+        }
+        clear();
+        this = b_tree_copy(&source);
+    }
+    
+    template <class Item>
+    std::size_t set<Item>::count(const Item& target) const
+    {
+        std::size_t i = get_index(target);
+        if (i < data_count && !(target < data[i]))
+        {
+            return 1;
+        }
+        if (child_count == 0)
+        {
+            return 0;
+        }
+        return subset[i]->count(target);
+    }
+    
+    template <class Item>
+    void set<Item>::print(int indent) const
+    {
+        if (this == NULL)
+        {
+            return;
+        }
+        const int EXTRA = 4;
+        int i;
+        cout << setw(indent) << "";
+        for (i = 0; i<data_count; i++)
+        {
+            cout << data[i] << " ";
+        }
+        cout << endl;
+        for (i = 0; i<child_count; i++)
+        {
+            subset[i]->print(indent + EXTRA);
+        }
+    }
+    
+    template <class Item>
+    std::size_t set<Item>::get_index(const Item& entry)
+    {
+        for (std::size_t i = 0; i < data_count; i++)
+        {
+            if (!(data[i] < entry))
+            {
+                return i;
+            }
+        }
+        return data_count;
+    }
+            
+    
+    
+    template <class Item>
+    bool set<Item>::loose_insert(const Item& entry)
+    {
+        int t;
+        for (t = 0; (t<data_count && data[t]<entry); t++)
+        {
+            if (t < data_count && data[t] == entry)
+            {
+                return false;
+            }
+            if (is_leaf())
+            {
+                for (int x = data_count; x>t; x--)
+                {
+                    data[x] = data[x - 1];
+                }
+                data_count++;
+                data[t] = entry;
+                return true;
+            }
+            else
+            {
+                int added = subset[t]->loose_insert(entry);
+                if (subset[t]->data_count > MAXIMUM)
+                {
+                    fix_excess(t);
+                }
+                return added;
+            }
+        }
+    }
+    
+    template <class Item>
+    bool set<Item>::loose_erase(const Item& target)
+    {
+        if (this == NULL)
+            return false;
+        for (int i = 0; i < data_count && data[i] < target; i++)
+        {
+            if (i == data_count && is_leaf())
+                return false;
+            if (i < data_count && data[i] == target && is_leaf())
+            {
+                data_count--;
+                for (int j = i; j<data_count; j++)
+                    data[j] = data[j + 1];
+                return false;
+            }
+            if (i == data_count || (i < data_count && data[i] != target))
+            {
+                if (is_leaf())
+                {
+                    return true;
+                }
+                subset[i]->loose_erase(target);
+                if (subset[i] != NULL && subset[i]->data_count < MINIMUM)
+                {
+                    fix_shortage(i);
+                }
+                return true;
+            }
+            if (subset[i + 1]->data_count > MINIMUM && is_leaf())
+            {
+                subset[i + 1]->remove_smallest(data[i]);
+            }
+            else
+            {
+                subset[i]->remove_largest(data[i]);
+                if (subset[i]->data_count < MINIMUM)
+                {
+                    fix_shortage(i);
+                }
+            }
+            return true;
+        }
+    }
+    
+    template <class Item>
+    void set<Item>::remove_biggest(Item& removed_entry)
+    {
+        if (this == NULL)
+        {
+            return;
+        }
+        loose_erase(removed_entry);
+        if (data_count == 0 && child_count == 1)
+        {
+            set* root = subset[0];
+            for (int i = 0; i<root->data_count; i++)
+            {
+                data[i] = root->data[i];
+            }
+            child_count = root->child_count;
+            data_count = root->data_count;
+            for (int i = 0; i<child_count; i++)
+            {
+                subset[i] = root->subset[i];
+            }
+            delete root;
+            root = NULL;
+        }
+    }
+    
+    template <class Item>
+    void set<Item>::fix_excess(std::size_t x)
+    {
+        int i;
+        for (i = data_count; i>x; i--)
+        {
+            data[i] = data[i - 1];
+        }
+        data[x] = subset[x]->data[MINIMUM];
+        data_count++;
+        set *left, *right;
+        right = new set;
+        left = new set;
+        right->data_count = MINIMUM;
+        left->data_count = MINIMUM;
+        for (i = 0; i<MINIMUM; i++)
+        {
+            left->data[i] = subset[x]->data[i];
+            right->data[i] = subset[x]->data[i + MINIMUM + 1];
+        }
+        if (!(subset[x]->is_leaf()))
+        {
+            int j = (subset[x]->child_count) / 2;
+            for (i = 0; i<j; i++)
+            {
+                left->subset[i] = subset[x]->subset[i];
+                right->subset[i] = subset[x]->subset[i + j];
+            }
+            right->child_count = MINIMUM + 1;
+            left->child_count = MINIMUM + 1;
+        }
+        subset[child_count] = new set;
+        for (i = child_count; i>x; i--)
+        {
+            subset[i] = subset[i - 1];
+        }
+        child_count++;
+        subset[x] = left;
+        subset[x + 1] = right;
+    }
+   
+    template <class Item>
+    set<Item>* b_tree_copy(const set<Item>* root_ptr)
+    {
+        if (root_ptr == nullptr)
+        {
+            return nullptr;
+        }
+        set<Item>* set_ptr = new set<Item>;
+        set_ptr->child_count = root_ptr->child_count;
+        set_ptr->data_count = root_ptr->data_count;
+        for (int i = 0; i < set_ptr->data_count; i++)
+        {
+            set_ptr->data[i] = root_ptr->data[i];
+        }
+        for (int i = 0; i < set_ptr->child_count; i++)
+        {
+            set_ptr->subset[i] = b_tree_copy(root_ptr->subset[i]);
+        }
+        return set_ptr;
+    }
+    
+    
+    template <class Item>
+    void set<Item>::b_tree_clear(set<Item>*& root_ptr)
+    {
+        if (root_ptr != nullptr)
+        {
+            for (auto& v : root_ptr->data)
+            {
+                v = Item();
+            }
+            for (int i = 0; i < root_ptr->child_count; i++)
+            {
+                b_tree_clear(root_ptr->subset[i]);
+            }
+            delete root_ptr;
+            root_ptr = nullptr;
+        }
+    }
+    
+    template <class item>
+    void set<item>::fix_shortage(std::size_t x)
+    {
+        int i;
+        if (x && subset[x - 1]->data_count > MINIMUM)
+        {
+            if (subset[x]->is_leaf())
+            {
+                for (i = subset[x]->data_count; i > 0; --i)
+                {
+                    subset[x]->data[i] = subset[x]->data[i - 1];
+                }
+                subset[x]->data[0] = data[x - 1];
+                subset[x]->data_count++;
+                data[x - 1] = subset[x - 1]->data[subset[x - 1]->data_count - 1];
+                subset[x - 1]->data_count--;
+            }
+            else
+            {
+                for (i = subset[x]->data_count; i > 0; --i)
+                {
+                    subset[x]->data[i] = subset[x]->data[i - 1];
+                    subset[x]->subset[i + 1] = subset[x]->subset[i];
+                }
+                subset[x]->subset[1] = subset[x]->subset[0];
+                subset[x]->data[0] = data[x - 1];
+                subset[x]->data_count++;
+                subset[x]->subset[0] = subset[x - 1]->subset[subset[x - 1]->data_count];
+                subset[x]->child_count++;
+                subset[x - 1]->child_count--;
+                data[x - 1] = subset[x - 1]->data[subset[x - 1]->data_count - 1];
+                subset[x - 1]->data_count--;
+            }
+            print(3);
+        }
+        else if (x < data_count && subset[x + 1]->data_count > MINIMUM)
+        {
+            if (subset[x]->is_leaf())
+            {
+                subset[x]->data[subset[x]->data_count] = data[x];
+                subset[x]->data_count++;
+                data[x] = subset[x + 1]->data[0];
+                subset[x + 1]->data_count--;
+                for (i = 0; i < subset[x + 1]->data_count; ++i)
+                {
+                    subset[x + 1]->data[i] = subset[x + 1]->data[i + 1];
+                }
+            }
+            else
+            {
+                subset[x]->data[subset[x]->data_count] = data[x];
+                subset[x]->data_count++;
+                subset[x]->subset[subset[x]->data_count] = subset[x + 1]->subset[0];
+                data[x] = subset[x + 1]->data[0];
+                subset[x + 1]->data_count--;
+                for (i = 0; i < subset[x + 1]->data_count; ++i)
+                {
+                    subset[x + 1]->data[i] = subset[x + 1]->data[i + 1];
+                    subset[x + 1]->subset[i] = subset[x + 1]->subset[i + 1];
+                }
+                subset[x + 1]->subset[i] = subset[x + 1]->subset[i + 1];
+                subset[x + 1]->child_count--;
+                subset[x]->child_count++;
+            }
+            print(3);
+        }
+        else if (x > 0)
+        {
+            if (subset[x]->is_leaf())
+            {
+                subset[x - 1]->data[subset[x - 1]->data_count] = data[x - 1];
+                subset[x - 1]->data_count++;
+                for (i = 0; i < subset[x]->data_count; ++i)
+                {
+                    subset[x - 1]->data[subset[x - 1]->data_count] = subset[x]->data[i];
+                    subset[x - 1]->data_count++;
+                }
+                delete subset[x];
+                subset[x] = NULL;
+                --child_count;
+                for (i = x; i < data_count; ++i)
+                {
+                    data[i - 1] = data[i];
+                    subset[i] = subset[i + 1];
+                }
+                --data_count;
+            }
+            else
+            {
+                subset[x - 1]->data[subset[x - 1]->data_count] = data[x - 1];
+                subset[x - 1]->data_count++;
+                for (i = 0; i < subset[x]->data_count; ++i)
+                {
+                    subset[x - 1]->data[subset[x - 1]->data_count] = subset[x]->data[i];
+                    subset[x - 1]->subset[subset[x - 1]->data_count] = subset[x]->subset[i];
+                    subset[x - 1]->data_count++;
+                    subset[x - 1]->child_count++;
+                }
+                subset[x - 1]->subset[subset[x - 1]->data_count] = subset[x]->subset[subset[x]->data_count];
+                subset[x - 1]->child_count++;
+                delete subset[x];
+                subset[x] = NULL;
+                --child_count;
+                for (i = x; i < data_count; ++i)
+                {
+                    data[i - 1] = data[i];
+                    subset[i] = subset[i + 1];
+                }
+            }
+            --data_count;
+        }
+        print(3);
+        else
+        {
+            cout << "Combine the value of the sibling of Right child from the B.tree" << endl;
+            if (subset[x]->is_leaf())
+            {
+                subset[x]->data[subset[x]->data_count] = data[x];
+                subset[x]->data_count++;
+                for (i = 0; i < subset[x + 1]->data_count; ++i)
+                {
+                    subset[x]->data[subset[x]->data_count] = subset[x + 1]->data[i];
+                    subset[x]->data_count++;
+                }
+                delete subset[x + 1];
+                subset[x + 1] = NULL;
+                --child_count;
+                for (i = x; i < data_count - 1; ++i)
+                {
+                    data[i] = data[i + 1];
+                    subset[i + 1] = subset[i + 2];
+                }
+                --data_count;
+                }
+            else
+            {
+                {
+                    subset[x]->data[subset[x]->data_count] = data[x];
+                    subset[x]->data_count++;
+                    for (i = 0; i < subset[x + 1]->data_count; ++i)
+                    {
+                        subset[x]->data[subset[x]->data_count] = subset[x + 1]->data[i];
+                        subset[x]->subset[subset[x]->data_count] = subset[x + 1]->subset[i];
+                        subset[x]->data_count++;
+                        subset[x]->child_count++;
+                    }
+                    subset[x]->subset[subset[x]->data_count] = subset[x + 1]->subset[subset[x + 1]->data_count];
+                    subset[x]->child_count++;
+                    delete subset[x + 1];
+                    subset[x + 1] = NULL;
+                    --child_count;
+                    for (i = x; i < data_count; ++i)
+                    {
+                        data[i] = data[i + 1];
+                        subset[i + 1] = subset[i + 2];
+                    }
+                    --data_count;
+                }
+                print(3);
+            }
+        }
+    }
+}
+
